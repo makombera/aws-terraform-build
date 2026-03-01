@@ -4,7 +4,8 @@ module "networking" {
   vpc_cidr = var.vpc_cidr
   az_count = 2
 }
-
+#
+# todo: add RDS module here
 module "database" {
   source              = "../../modules/database"
   name                = var.name
