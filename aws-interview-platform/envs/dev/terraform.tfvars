@@ -8,6 +8,6 @@ db_password = "ChangeMe-Use-SecretsManager"
 tags = {
   Environment = "dev"
   Project     = "aws-interview-platform"
-  Owner       = "you"
+  Owner       = "allen"
   CostCenter  = "learning"
 }
