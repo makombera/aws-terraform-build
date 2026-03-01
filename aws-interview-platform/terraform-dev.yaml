@@ -1,0 +1,80 @@
+name: terraform-dev
+
+on:
+  pull_request:
+    paths:
+      - "envs/dev/**"
+      - "modules/**"
+      - ".github/workflows/terraform-dev.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "envs/dev/**"
+      - "modules/**"
+      - ".github/workflows/terraform-dev.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: envs/dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform fmt
+        run: terraform fmt -recursive -check
+
+      - name: Terraform init
+        run: terraform init -upgrade
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan -no-color
+
+  apply:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: dev
+    defaults:
+      run:
+        working-directory: envs/dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform init
+        run: terraform init -upgrade
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve
